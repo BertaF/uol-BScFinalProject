@@ -18,7 +18,10 @@ namespace Assets.Scripts
             // *-2 is suppose to be the gravity value.
             float fJumpForce = Mathf.Sqrt(jumpHeight * -2 * (Physics.gravity.y * gravityScale));
             player.Rigidbody.AddForce(new Vector3(0, fJumpForce, 0), ForceMode.Impulse);
-            Debug.Log("Starting jumping with force vector: " + fJumpForce);
+
+#if UNITY_EDITOR
+            DebugRender.LogMessage("Starting jumping with force vector: " + fJumpForce);
+#endif
         }
 
         public override void OnUpdate(PlayerController_FSM player)
@@ -33,15 +36,15 @@ namespace Assets.Scripts
 
         public override void OnCollisionEnter(PlayerController_FSM player)
         {
-            player.isGrounded = true;
+            player.IsGrounded = true;
 
             // Transition back to the idle state once the jump has finished / player landed on ground
-            player.StateTransition(player.idleState);
+            player.StateTransition(player.IdleState);
         }
 
         public override void OnCollisionExit(PlayerController_FSM player)
         {
-            player.isGrounded = false;
+            player.IsGrounded = false;
         }
     }
 }

@@ -6,17 +6,23 @@ namespace Assets.Scripts
     public class PlayerController_FSM : MonoBehaviour
     {
         #region Member Variables
+        [SerializeField] public float JumpBaselineThreshold = 1.0f;
+        // This is based on a seated position, so will need to be adjusted if standing
+        [SerializeField] public float HeightDiffToTriggerJump = 0.15f;
+
         // References to instances of player concrete states
-        public readonly PlayerIdleState idleState = new PlayerIdleState();
+        public readonly PlayerIdleState IdleState = new();
         public Rigidbody Rigidbody { get; private set; }
         public PlayerBaseState CurrentState { get; private set; }
         public XROrigin XrOrigin { get; private set; }
         public CapsuleCollider CapsuleCollider { get; private set; }
 
-        [HideInInspector]
-        public float headsetBaseline;
-        [HideInInspector]
-        public bool isGrounded;
+        [HideInInspector] public float HeadsetBaseline;
+        [HideInInspector] public float PreviousHeadsetBaseline;
+        [HideInInspector] public float UpAcceleration;
+        [HideInInspector] public float PreviousHeadsetUpVelocity;
+        [HideInInspector] public bool IsGrounded;
+        [HideInInspector] public bool IsMonitoringJump;
         #endregion
 
         private void Awake()
@@ -25,13 +31,19 @@ namespace Assets.Scripts
             XrOrigin = GetComponent<XROrigin>();
             CapsuleCollider = GetComponent<CapsuleCollider>();
 
-            headsetBaseline = CapsuleCollider.height;
+            IsGrounded = false;
+            IsMonitoringJump = false;
+            HeadsetBaseline = CapsuleCollider.height;
+            PreviousHeadsetBaseline = CapsuleCollider.height;
+
+            UpAcceleration = 0.0f;
+            PreviousHeadsetUpVelocity = Rigidbody.velocity.y;
         }
 
         private void Start()
         {
             // Sets the initial state to be idle
-            StateTransition(idleState);
+            StateTransition(IdleState);
         }
 
         private void FixedUpdate()

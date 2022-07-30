@@ -9,17 +9,5 @@ EditorBuildSettings:
     path: Assets/Scenes/Locus.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
   m_configObjects:
-    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: bfa1182bd221b4ca89619141f66f1260,
-      type: 2}
-    Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: dc5a169419fa04987b057f65238cf3ba,
-      type: 2}
-    UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 9bec1ce6a03ccba4b9a8215241b32e63,
-      type: 2}
-    UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: a49cadc1a815591479693b955ccf08c1,
-      type: 2}
-    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 1a4c68ca72a83449f938d669337cb305,
-      type: 2}
-    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: a9a6963505ddf7f4d886008c6dc86122,
-      type: 2}
-    xr.sdk.mock-hmd.settings: {fileID: 11400000, guid: d632fed94e808a34d8bcaf253ffc4bfb,
-      type: 2}
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: ca90d33433baae54da1e4e682f941d84, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 0719d0063f6d2b648b85aed819e73c00, type: 2}

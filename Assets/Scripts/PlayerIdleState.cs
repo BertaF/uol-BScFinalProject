@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -9,22 +11,24 @@ namespace Assets.Scripts
     public class PlayerIdleState : PlayerBaseState
     {
         #region Member Variables
-        [SerializeField] public float jumpBaselineThreshold = 20.0f;
-
-        private const int HeadsetHeightsListSize = 100;
+        private const int HeadsetHeightsListSize = 50;
         private readonly List<float> _headsetHeights = new(HeadsetHeightsListSize);
-        private float _fPreviousHeadsetBaseline;
-        private float _fPreviousHeadsetUpVelocity;
+        private Vector3 vHeadsetVelocity;
+        private Vector3 vPreviousHeadsetPos;
+        private Vector3 vUpHeadsetVelocity;
 
         // References to instances of player concrete states
-        public readonly PlayerJumpState jumpState = new PlayerJumpState();
+        public readonly PlayerJumpState JumpState = new PlayerJumpState();
         #endregion
 
         public override void EnterState(PlayerController_FSM player)
         {
             // Make sure the headset heights list is empty before adding new values
             _headsetHeights.Clear();
-            _fPreviousHeadsetUpVelocity = player.Rigidbody.velocity.y;
+
+           vHeadsetVelocity = new(0.0f, 0.0f, 0.0f);
+           vPreviousHeadsetPos = new(0.0f, 0.0f, 0.0f);
+           vUpHeadsetVelocity = new(0.0f, 0.0f, 0.0f);
         }
 
         public override void OnUpdate(PlayerController_FSM player)
@@ -36,43 +40,69 @@ namespace Assets.Scripts
             // Use the camera floor height offset to reposition the player collider height
             player.CapsuleCollider.height = Mathf.Clamp(player.XrOrigin.CameraInOriginSpaceHeight, 1.0f, 3.0f);
 
+            // Update the list of headset heights which is reset every HeadsetHeightsListSize frames
             _headsetHeights.Add(player.CapsuleCollider.height);
             ComputeAverageHeadsetHeight(player);
+
+            if (Time.deltaTime > 0.0f)
+            {
+                // Get the vector with the difference over time between previous and current headset position
+                Vector3 vCurrHeadsetPos = player.CapsuleCollider.transform.position;
+                vHeadsetVelocity = (vCurrHeadsetPos - vPreviousHeadsetPos) / Time.deltaTime;
+                vPreviousHeadsetPos = player.CapsuleCollider.transform.position;
+
+                // Get how much velocity is projected towards the upwards position
+                vUpHeadsetVelocity = Vector3.Project(vHeadsetVelocity, player.CapsuleCollider.transform.up.normalized);
+            }
+
+#if UNITY_EDITOR
+            DebugRender.LogMessage("[Headset Velocity] vUpHeadsetVelocity: " + vUpHeadsetVelocity);
+#endif
         }
 
         public override void OnFixedUpdate(PlayerController_FSM player)
         {
             // If the headset has been lowered, enable the monitoring logic to check if we want to jump
-            if (player.isGrounded && player.headsetBaseline < _fPreviousHeadsetBaseline)
+            float fCurrentHeadsetHeight = player.CapsuleCollider.height;
+            //float fHeadsetBaselineDiff = Mathf.Abs(player.HeadsetBaseline - fCurrentHeadsetHeight);
+            bool bLoweredHeadset = fCurrentHeadsetHeight < player.HeadsetBaseline;
+
+            if (player.IsGrounded /*&& fHeadsetBaselineDiff > player.HeightDiffToTriggerJump*/ && bLoweredHeadset)
             {
                 player.StartCoroutine(MonitorPotentialJump(player));
+            }
+            else
+            {
+                player.IsMonitoringJump = false;
             }
         }
 
         public override void OnCollisionEnter(PlayerController_FSM player)
         {
-            player.isGrounded = true;
+            player.IsGrounded = true;
         }
 
         public override void OnCollisionExit(PlayerController_FSM player)
         {
-            player.isGrounded = false;
+            player.IsGrounded = false;
         }
 
-        // Calculates the average headset height from values gathered in the last 100 frames
+        // Calculates the average headset height from values gathered in the last 50 frames
         private void ComputeAverageHeadsetHeight(PlayerController_FSM player)
         {
             if (_headsetHeights.Count != HeadsetHeightsListSize) return;
 
-            if (!player.isGrounded) return;
+            if (!player.IsGrounded) return;
 
             // Cache the current headset baseline before updating it
-            _fPreviousHeadsetBaseline = player.headsetBaseline;
+            player.PreviousHeadsetBaseline = player.HeadsetBaseline;
 
             // Cache the new headset baseline average
-            player.headsetBaseline = _headsetHeights.AsQueryable().Average();
+            player.HeadsetBaseline = _headsetHeights.AsQueryable().Average();
 
-            Debug.Log("[Headsetheight] Average headset height: " + player.headsetBaseline + ". Number of values gathered: " + _headsetHeights.Count);
+#if UNITY_EDITOR
+            DebugRender.LogMessage("[Headsetheight] Average headset height: " + player.HeadsetBaseline + ". Number of values gathered: " + _headsetHeights.Count);
+#endif
 
             // Start gathering new headset height positions all over again
             _headsetHeights.Clear();
@@ -80,16 +110,15 @@ namespace Assets.Scripts
 
         private IEnumerator MonitorPotentialJump(PlayerController_FSM player)
         {
-            // Trigger a jump if the headset upwards acceleration is higher than the headset baseline
-            float upAcceleration = (player.Rigidbody.velocity.y - _fPreviousHeadsetUpVelocity) / Time.fixedDeltaTime;
-            _fPreviousHeadsetUpVelocity = player.Rigidbody.velocity.y;
+            player.IsMonitoringJump = true;
 
-            Debug.Log("[MonitorPotentialJump] Current up acceleration: " + upAcceleration + " > _headsetBaseline: " + player.headsetBaseline);
-
-            if (upAcceleration > player.headsetBaseline + jumpBaselineThreshold)
+#if UNITY_EDITOR
+            DebugRender.LogMessage("[MonitorPotentialJump] Current up velocity: " + vHeadsetVelocity + " > player.JumpBaselineThreshold: " + player.JumpBaselineThreshold);
+#endif
+            // Trigger a jump if the headset upwards acceleration is higher than the threshold
+            if (vUpHeadsetVelocity.sqrMagnitude > player.JumpBaselineThreshold)
             {
-                player.StateTransition(jumpState);
-                Debug.Log("[MonitorPotentialJump] Transitioning to jump state due to upAcceleration: " + upAcceleration + " > _headsetBaseline: " + player.headsetBaseline);
+                player.StateTransition(JumpState);
             }
 
             yield return null;
