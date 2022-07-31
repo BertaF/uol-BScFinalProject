@@ -17,6 +17,9 @@ namespace Assets.Scripts
         public XROrigin XrOrigin { get; private set; }
         public CapsuleCollider CapsuleCollider { get; private set; }
 
+        [SerializeField] public GameObject CameraObject;
+        [SerializeField] public GameObject ForwardDir;
+
         [HideInInspector] public float HeadsetBaseline;
         [HideInInspector] public float PreviousHeadsetBaseline;
         [HideInInspector] public float UpAcceleration;

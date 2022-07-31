@@ -5,18 +5,15 @@ namespace Assets.Scripts
     public class PlayerJumpState : PlayerBaseState
     {
         #region Member Variables
-        [SerializeField] public float jumpFwdScaleFactor = 1.8f;
-        [SerializeField] public float jumpHeight = 2.0f;
-        [SerializeField] public float gravityScale = 1.0f;
-        [SerializeField] public float jumpForce = 500.0f;
-        [SerializeField] public float fallingGravityScale = 10.0f;
+        [SerializeField] public float JumpFwdScaleFactor = 1.8f;
+        [SerializeField] public float JumpHeight = 1.5f;
+        [SerializeField] public float GravityScale = 1.0f;
         #endregion
 
         public override void EnterState(PlayerController_FSM player)
         {
-            // Vector3 vJumpForce = Physics.gravity * (1 - gravityScale) * rb.mass;
-            // *-2 is suppose to be the gravity value.
-            float fJumpForce = Mathf.Sqrt(jumpHeight * -2 * (Physics.gravity.y * gravityScale));
+            // *-2 is supposed to be the gravity value.
+            float fJumpForce = Mathf.Sqrt(JumpHeight * -2 * (Physics.gravity.y * GravityScale));
             player.Rigidbody.AddForce(new Vector3(0, fJumpForce, 0), ForceMode.Impulse);
 
 #if UNITY_EDITOR
@@ -29,9 +26,14 @@ namespace Assets.Scripts
 
         public override void OnFixedUpdate(PlayerController_FSM player)
         {
-            // Apply a forward movement to the player forward vector every frame
-            float fJumpFwdForce = Mathf.Sqrt(jumpFwdScaleFactor * -2 * (Physics.gravity.y * gravityScale));
-            player.Rigidbody.AddForce(new Vector3(0, 0, fJumpFwdForce), ForceMode.Force);
+            // The jump trajectory is performed in the direction the camera is looking.
+            // Gets the angle of where the camera is looking - rotation on the y-axis.
+            float yRotation = player.CameraObject.transform.eulerAngles.y;
+            player.ForwardDir.transform.eulerAngles = new Vector3(0, yRotation, 0);
+
+            // Apply a forward movement to the player forward vector every frame.
+            float fJumpFwdForce = Mathf.Sqrt(JumpFwdScaleFactor * -2 * (Physics.gravity.y * GravityScale));
+            player.Rigidbody.AddForce(player.ForwardDir.transform.forward * fJumpFwdForce, ForceMode.Force);
         }
 
         public override void OnCollisionEnter(PlayerController_FSM player)
