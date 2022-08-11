@@ -1,71 +1,77 @@
-using System.Collections;
-using System.Collections.Generic;
+using Assets.Scripts;
 using UnityEngine;
 
 public class ArmSwingMovement : MonoBehaviour
 {
+    private PlayerController_FSM _player;
+
     // Game Objects
-    public GameObject leftHand;
-    public GameObject rightHand;
-    public GameObject cameraObject;
-    public GameObject forwardDir;
+    public GameObject LeftHand;
+    public GameObject RightHand;
+    public GameObject CameraObject;
+    public GameObject ForwardDir;
 
     // Positions
     // Hands
-    private Vector3 vPreviousLeftHandPos;
-    private Vector3 vPreviousRightHandPos;
-    private Vector3 vCurrentRightHandPos;
-    private Vector3 vCurrentLeftHandPos;
+    private Vector3 _vPreviousLeftHandPos;
+    private Vector3 _vPreviousRightHandPos;
+    private Vector3 _vCurrentRightHandPos;
+    private Vector3 _vCurrentLeftHandPos;
 
     // Player
-    private Vector3 vPlayerPreviousPos;
-    private Vector3 vPlayerCurrentPos;
+    private Vector3 _vPlayerPreviousPos;
+    private Vector3 _vPlayerCurrentPos;
 
     // Speed
-    public float playerSpeed = 60.0f;
-    public float handSpeed;
+    public float PlayerSpeed = 60.0f;
+    public float HandSpeed;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
         // Gets the previous positions
-        vPlayerPreviousPos = transform.position;
-        vPreviousLeftHandPos = leftHand.transform.position;
-        vPreviousRightHandPos = rightHand.transform.position;
+        _vPlayerPreviousPos = transform.position;
+        _vPreviousLeftHandPos = LeftHand.transform.position;
+        _vPreviousRightHandPos = RightHand.transform.position;
+
+        _player = GetComponentInParent<PlayerController_FSM>();
     }
 
     // Update is called once per frame
-    private void Update()
+    private void FixedUpdate()
     {
+        if (_player.IsMonitoringJump || _player.IsClimbing)
+            return;
+
         // Get the angle of where the camera is looking - rotation on the y-axis
         // Forward direction
-        float yRotation = cameraObject.transform.eulerAngles.y;
-        forwardDir.transform.eulerAngles = new Vector3(0, yRotation, 0);
+        float yRotation = CameraObject.transform.eulerAngles.y;
+        ForwardDir.transform.eulerAngles = new Vector3(0, yRotation, 0);
 
         // Get the current hand position
-        vCurrentLeftHandPos = leftHand.transform.position;
-        vCurrentRightHandPos = rightHand.transform.position;
+        _vCurrentLeftHandPos = LeftHand.transform.position;
+        _vCurrentRightHandPos = RightHand.transform.position;
 
         // Get current player position
-        vPlayerCurrentPos = transform.position;
+        _vPlayerCurrentPos = transform.position;
 
         // Get distance/difference in position of hands and player since last frame
-        float fPlayerDistMoved = Vector3.Distance(vPlayerCurrentPos, vPlayerPreviousPos);
-        float fLeftHandDistMoved = Vector3.Distance(vCurrentLeftHandPos, vPreviousLeftHandPos);
-        float fRightHandDistMoved = Vector3.Distance(vCurrentRightHandPos, vPreviousRightHandPos);
+        float fPlayerDistMoved = Vector3.Distance(_vPlayerCurrentPos, _vPlayerPreviousPos);
+        float fLeftHandDistMoved = Vector3.Distance(_vCurrentLeftHandPos, _vPreviousLeftHandPos);
+        float fRightHandDistMoved = Vector3.Distance(_vCurrentRightHandPos, _vPreviousRightHandPos);
 
-        handSpeed = (fLeftHandDistMoved - fPlayerDistMoved) + (fRightHandDistMoved - fPlayerDistMoved);
+        HandSpeed = (fLeftHandDistMoved - fPlayerDistMoved) + (fRightHandDistMoved - fPlayerDistMoved);
 
         if (Time.timeSinceLevelLoad > 2.0f)
         {
-            transform.position += forwardDir.transform.forward * handSpeed * playerSpeed * Time.deltaTime;
+            _player.Rigidbody.AddForce(HandSpeed * PlayerSpeed * ForwardDir.transform.forward);
         }
 
         // Set hands previous frame to the current frame
-        vPreviousLeftHandPos = vCurrentLeftHandPos;
-        vPreviousRightHandPos = vCurrentRightHandPos;
+        _vPreviousLeftHandPos = _vCurrentLeftHandPos;
+        _vPreviousRightHandPos = _vCurrentRightHandPos;
 
         // Set player previous position to current position
-        vPlayerPreviousPos = vPlayerCurrentPos;
+        _vPlayerPreviousPos = _vPlayerCurrentPos;
     }
 }

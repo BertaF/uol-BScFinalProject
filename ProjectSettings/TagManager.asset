@@ -6,6 +6,7 @@ TagManager:
   tags:
   - HeadsetBaseline
   - HeadsetCurrentPosLine
+  - Ground
   layers:
   - Default
   - TransparentFX

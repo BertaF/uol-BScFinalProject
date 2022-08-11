@@ -1,3 +1,4 @@
+using System;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 
@@ -8,7 +9,11 @@ namespace Assets.Scripts
         #region Member Variables
         [SerializeField] public float JumpBaselineThreshold = 1.0f;
         // This is based on a seated position, so will need to be adjusted if standing
-        [SerializeField] public float HeightDiffToTriggerJump = 0.15f;
+        [SerializeField] public float HeightDiffToTriggerJump = 0.15f; 
+        [SerializeField] public float DistToGround = 1.0f;
+
+        [Header("Game Events")]
+        [SerializeField] public GameEvent JumpLanding;
 
         // References to instances of player concrete states
         public readonly PlayerIdleState IdleState = new();
@@ -26,6 +31,7 @@ namespace Assets.Scripts
         [HideInInspector] public float PreviousHeadsetUpVelocity;
         [HideInInspector] public bool IsGrounded;
         [HideInInspector] public bool IsMonitoringJump;
+        [HideInInspector] public bool IsClimbing;
         #endregion
 
         private void Awake()
@@ -36,32 +42,36 @@ namespace Assets.Scripts
 
             IsGrounded = false;
             IsMonitoringJump = false;
+            IsClimbing = false;
             HeadsetBaseline = CapsuleCollider.height;
             PreviousHeadsetBaseline = CapsuleCollider.height;
 
             UpAcceleration = 0.0f;
-            PreviousHeadsetUpVelocity = Rigidbody.velocity.y;
+            PreviousHeadsetUpVelocity = 0.0f;
         }
 
         private void Start()
         {
+            DoGroundCheck();
+
             // Sets the initial state to be idle
             StateTransition(IdleState);
         }
 
         private void FixedUpdate()
         {
+            DoGroundCheck();
             CurrentState.OnFixedUpdate(this);
         }
 
-        private void OnCollisionEnter()
+        private void OnCollisionEnter(Collision other)
         {
-            CurrentState.OnCollisionEnter(this);
+            CurrentState.OnCollisionEnter(other, this);
         }
 
-        private void OnCollisionExit()
+        private void OnCollisionExit(Collision other)
         {
-            CurrentState.OnCollisionExit(this);
+            CurrentState.OnCollisionExit(other, this);
         }
 
         private void Update()
@@ -74,6 +84,20 @@ namespace Assets.Scripts
         {
             CurrentState = state;
             CurrentState.EnterState(this);
+        }
+        private void DoGroundCheck()
+        {
+            IsGrounded = Physics.Raycast(CapsuleCollider.transform.position + CapsuleCollider.center, Vector3.down, out var rayHit, DistToGround + 0.1f);
+            Debug.DrawRay(CapsuleCollider.transform.position + CapsuleCollider.center, Vector3.down, Color.magenta, 1.0f);
+
+            if (IsGrounded)
+            {
+                Debug.Log("Player is grounded on: " + rayHit.transform.name);
+            }
+            else
+            {
+                Debug.Log("Player is NOT grounded");
+            }
         }
     }
 }

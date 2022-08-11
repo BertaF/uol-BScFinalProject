@@ -26,7 +26,7 @@ namespace Assets.Scripts
             // Make sure the headset heights list is empty before adding new values
             _headsetHeights.Clear();
             _headsetPositions.Clear();
-            
+
             _vHeadsetVelocity = new Vector3(0.0f, 0.0f, 0.0f);
             _vPreviousHeadsetPos = new Vector3(0.0f, 0.0f, 0.0f);
             _vUpHeadsetVelocity = new Vector3(0.0f, 0.0f, 0.0f);
@@ -39,23 +39,26 @@ namespace Assets.Scripts
                 return;
 
             // Make the player capsule collider follow the camera (headset) position
-            var center = player.XrOrigin.CameraInOriginSpacePos;
-            player.CapsuleCollider.center = new Vector3(center.x, player.CapsuleCollider.height / 2.0f, center.z);
+            var cameraPos = player.XrOrigin.CameraInOriginSpacePos;
+            player.CapsuleCollider.center = new Vector3(cameraPos.x, player.CapsuleCollider.height / 2.0f, cameraPos.z);
 
             // Use the camera floor height offset to reposition the player collider height
             player.CapsuleCollider.height = Mathf.Clamp(player.XrOrigin.CameraInOriginSpaceHeight, 1.0f, 3.0f);
+
+            var playerPos = player.CapsuleCollider.transform.position;
+            var playerHeight = player.CapsuleCollider.height;
 
             if (!player.IsMonitoringJump)
             {
                 // When not monitoring for jumps, update the list of headset heights which is reset every HeadsetHeightsListSize frames.
                 _headsetHeights.Add(player.CapsuleCollider.height);
-                Vector3 vWorldPosition = player.CapsuleCollider.transform.TransformDirection(new Vector3(player.CapsuleCollider.transform.position.x, player.CapsuleCollider.height, player.CapsuleCollider.transform.position.z));
+                var vWorldPosition = player.CapsuleCollider.transform.TransformDirection(new Vector3(playerPos.x, playerHeight, playerPos.z));
                 _headsetPositions.Add(vWorldPosition);
             }
 
             ComputeAverageHeadsetHeight(player);
 
-            Vector3 vCurrHeadsetPos = new Vector3(player.CapsuleCollider.transform.position.x, player.CapsuleCollider.height, player.CapsuleCollider.transform.position.z);
+            var vCurrHeadsetPos = new Vector3(playerPos.x, playerHeight, playerPos.z);
 
             if (Time.deltaTime > 0.0f)
             {
@@ -71,10 +74,6 @@ namespace Assets.Scripts
             }
 
 #if UNITY_EDITOR
-            DebugRender.LogMessage("[Headset] IsMonitoringJump: " + player.IsMonitoringJump);
-            DebugRender.LogMessage("[Headset Velocity] vUpHeadsetVelocity: " + _vUpHeadsetVelocity);
-            DebugRender.LogMessage("[Headset Pos] vCurrHeadsetPos: " + vCurrHeadsetPos);
-
             if (_headsetPositions.Count > 1)
             {
                 DebugRender.RenderHeadsetBaseline(_headsetPositions, player.HeadsetBaseline, player.CapsuleCollider.height);
@@ -86,17 +85,15 @@ namespace Assets.Scripts
         {
             // Avoid all computations if not on ground 
             if (!player.IsGrounded)
+            {
+                DebugRender.LogMessage("[OnFixedUpdate] Player is not grounded, NOT UPDATING : " + player.IsGrounded);
                 return;
+            }
 
             // If the headset has been lowered, enable the monitoring logic to check if we want to jump
             float fHeadsetBaselineDiff = Mathf.Abs(player.HeadsetBaseline - player.CapsuleCollider.height);
             bool bLoweredHeadset = player.CapsuleCollider.height < player.HeadsetBaseline;
 
-#if UNITY_EDITOR
-            DebugRender.LogMessage($"[Coroutine] IsGrounded: {player.IsGrounded} " +
-                                   $"bLoweredHeadset: {bLoweredHeadset} fHeadsetBaselineDiff > player.HeightDiffToTriggerJump{fHeadsetBaselineDiff > player.HeightDiffToTriggerJump} " +
-                                   $"IsMonitoringJump: {player.IsMonitoringJump}");
-#endif
             if (player.IsGrounded && bLoweredHeadset && fHeadsetBaselineDiff > player.HeightDiffToTriggerJump)
             {
                 player.StartCoroutine(MonitorPotentialJump(player));
@@ -107,14 +104,22 @@ namespace Assets.Scripts
             }
         }
 
-        public override void OnCollisionEnter(PlayerController_FSM player)
+        public override void OnCollisionEnter(Collision other, PlayerController_FSM player)
         {
-            player.IsGrounded = true;
+            //if (!other.gameObject.CompareTag("Ground"))
+            //    return;
+
+            //player.IsGrounded = true;
+            //DebugRender.LogMessage("[OnCollisionEnter] Is Grounded to : " + other.gameObject.name);
         }
 
-        public override void OnCollisionExit(PlayerController_FSM player)
+        public override void OnCollisionExit(Collision other, PlayerController_FSM player)
         {
+/*            if (!other.gameObject.CompareTag("Ground"))
+                return;
+
             player.IsGrounded = false;
+            DebugRender.LogMessage("[OnCollisionExit] Is NOT Grounded to: " + other.gameObject.name);*/
         }
 
         // Calculates the average headset height from values gathered in the last 50 frames
@@ -129,10 +134,6 @@ namespace Assets.Scripts
             // Cache the new headset baseline average
             player.HeadsetBaseline = _headsetHeights.AsQueryable().Average();
 
-#if UNITY_EDITOR
-            DebugRender.LogMessage("[Headsetheight] Average headset height: " + player.HeadsetBaseline + ". Number of values gathered: " + _headsetHeights.Count);
-#endif
-
             // Start gathering new headset height positions all over again
             _headsetHeights.Clear();
             _headsetPositions.Clear();
@@ -142,18 +143,9 @@ namespace Assets.Scripts
         {
             player.IsMonitoringJump = true;
 
-#if UNITY_EDITOR
-            DebugRender.LogMessage($"[MonitorPotentialJump] Current up velocity: {_vUpHeadsetVelocity}" +
-                                   $"UpHeadsetVelocity{_vUpHeadsetVelocity.sqrMagnitude} " +
-                                   $"needs to be > JumpBaselineThreshold: {player.JumpBaselineThreshold}");
-#endif
             // Trigger a jump if the headset upwards acceleration is higher than the threshold
             if (_vUpHeadsetVelocity.y > 0.0f && _vUpHeadsetVelocity.sqrMagnitude > player.JumpBaselineThreshold)
             {
-#if UNITY_EDITOR
-                DebugRender.LogMessage(
-                    $"[MonitorPotentialJump] About to jump, Current up velocity: {_vUpHeadsetVelocity} > player.JumpBaselineThreshold: {player.JumpBaselineThreshold}");
-#endif
                 player.StateTransition(JumpState);
             }
 

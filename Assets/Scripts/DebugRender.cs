@@ -74,6 +74,9 @@ namespace Assets.Scripts
 
         public static void RenderHeadsetBaseline(List<Vector3> headsetPositions, float fBaseline, float fCurrentHeight)
         {
+            if (_lines.Count == 0)
+                return;
+
             foreach (var line in _lines)
             {
                 Vector3 vStartPos;
