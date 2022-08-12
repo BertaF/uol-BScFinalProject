@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
+    [RequireComponent(typeof(Rigidbody))]
     public class PlayerJumpState : PlayerBaseState
     {
         #region Member Variables
