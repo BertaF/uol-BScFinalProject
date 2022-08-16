@@ -51,15 +51,11 @@ namespace Assets.Scripts
 
             haptics.SendHaptics();
 
-            //player.IsGrounded = true;
-
             // Transition back to the idle state once the jump has finished / player landed on ground
             player.StateTransition(player.IdleState);
         }
 
         public override void OnCollisionExit(Collision other, PlayerController_FSM player)
-        {
-            //player.IsGrounded = false;
-        }
+        {}
     }
 }

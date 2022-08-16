@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text;
 using Unity.VisualScripting;
@@ -59,12 +58,12 @@ namespace Assets.Scripts
 
             foreach (var line in _lines)
             {
-                if (line.gameObject.CompareTag("HeadsetCurrentPosLine"))
+                if (line.gameObject.CompareTag("HeadsetBaseline"))
                 {
                     line.SetPosition(0, new Vector3(transform.position.x - 0.5f, _playerFsm.HeadsetBaseline, transform.position.z - 1.0f));
                     line.SetPosition(1, new Vector3(transform.position.x + 0.5f, _playerFsm.HeadsetBaseline, transform.position.z - 1.0f));
                 }
-                else if (line.gameObject.CompareTag("HeadsetBaseline"))
+                else if (line.gameObject.CompareTag("HeadsetCurrentPosLine"))
                 {
                     line.SetPosition(0, new Vector3(transform.position.x - 1.0f, _playerFsm.CapsuleCollider.height, transform.position.z - 1.0f));
                     line.SetPosition(1, new Vector3(transform.position.x + 1.0f, _playerFsm.CapsuleCollider.height, transform.position.z - 1.0f));
@@ -74,7 +73,7 @@ namespace Assets.Scripts
 
         public static void RenderHeadsetBaseline(List<Vector3> headsetPositions, float fBaseline, float fCurrentHeight)
         {
-            if (_lines.Count == 0)
+            if (_lines.IsUnityNull() || _lines.Count == 0)
                 return;
 
             foreach (var line in _lines)
