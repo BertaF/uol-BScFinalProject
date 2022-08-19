@@ -3,13 +3,12 @@ using UnityEngine.Events;
 
 public class GameEventListener : MonoBehaviour 
 {
-    [SerializeField] GameEvent gameEvent;
-    [SerializeField] UnityEvent unityEvent;
+    [SerializeField] private GameEvent gameEvent;
+    [SerializeField] private UnityEvent unityEvent;
 
-    void Awake() => gameEvent.Register(this);
+    private void Awake() => gameEvent.Register(this);
 
-    void OnDestroy() => gameEvent.Deregister(this);
+    private void OnDestroy() => gameEvent.Deregister(this);
 
     public void RaiseEvent() => unityEvent.Invoke();
-
 }

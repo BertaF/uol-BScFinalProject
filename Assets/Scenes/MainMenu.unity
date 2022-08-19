@@ -2172,7 +2172,7 @@ GameObject:
   - component: {fileID: 215252082}
   - component: {fileID: 215252081}
   m_Layer: 0
-  m_Name: Button (1)
+  m_Name: HelpButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9312,7 +9312,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19ef6ce020ce95e4d9e0efdb46518873, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fadeScreen: {fileID: 624195219}
+  _fadeScreen: {fileID: 624195219}
 --- !u!4 &744197957
 Transform:
   m_ObjectHideFlags: 0
@@ -25404,7 +25404,7 @@ GameObject:
   - component: {fileID: 1897487060}
   - component: {fileID: 1897487063}
   m_Layer: 0
-  m_Name: Button
+  m_Name: StartButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

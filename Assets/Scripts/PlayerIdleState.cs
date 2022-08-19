@@ -105,22 +105,10 @@ namespace Assets.Scripts
         }
 
         public override void OnCollisionEnter(Collision other, PlayerController_FSM player)
-        {
-            //if (!other.gameObject.CompareTag("Ground"))
-            //    return;
-
-            //player.IsGrounded = true;
-            //DebugRender.LogMessage("[OnCollisionEnter] Is Grounded to : " + other.gameObject.name);
-        }
+        {}
 
         public override void OnCollisionExit(Collision other, PlayerController_FSM player)
-        {
-/*            if (!other.gameObject.CompareTag("Ground"))
-                return;
-
-            player.IsGrounded = false;
-            DebugRender.LogMessage("[OnCollisionExit] Is NOT Grounded to: " + other.gameObject.name);*/
-        }
+        {}
 
         // Calculates the average headset height from values gathered in the last 50 frames
         private void ComputeAverageHeadsetHeight(PlayerController_FSM player)

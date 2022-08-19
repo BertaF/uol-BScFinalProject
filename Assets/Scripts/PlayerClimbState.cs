@@ -8,6 +8,7 @@ namespace Assets.Scripts
     /// The PlayerClimbState class, processes climb requests and is responsible for setting the physical forces required to perform a climb action.
     /// </summary>
     [RequireComponent(typeof(PlayerController_FSM))]
+
     public class PlayerClimbState : MonoBehaviour
     {
         #region Member Variables

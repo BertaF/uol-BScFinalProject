@@ -1,60 +1,64 @@
-using Assets.Scripts;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
-public class ClimbEdgeDetection : XRBaseInteractable
+namespace Assets.Scripts
 {
-    [SerializeField] private PlayerClimbState _playerClimbState;
-
-    protected override void Awake()
+    public class ClimbEdgeDetection : XRBaseInteractable
     {
-        base.Awake();
-        FindClimbingProvider();
-    }
+        #region Member Variables
+        [SerializeField] private PlayerClimbState _playerClimbState;
+        #endregion
 
-    protected override void OnSelectEntered(SelectEnterEventArgs args)
-    {
-        base.OnSelectEntered(args);
-        TryAdd(args.interactorObject);
-    }
-
-    protected override void OnSelectExited(SelectExitEventArgs args)
-    {
-        base.OnSelectExited(args);
-        TryRemove(args.interactorObject);
-    }
-
-    private void TryAdd(IXRInteractor interactor)
-    {
-        if (interactor.transform.TryGetComponent(out VelocityController controller))
+        protected override void Awake()
         {
-            _playerClimbState.AddController(controller);
+            base.Awake();
+            FindClimbingProvider();
         }
-    }
 
-    private void TryRemove(IXRInteractor interactor)
-    {
-        if (interactor.transform.TryGetComponent(out VelocityController controller))
+        protected override void OnSelectEntered(SelectEnterEventArgs args)
         {
-            _playerClimbState.RemoveController(controller);
+            base.OnSelectEntered(args);
+            TryAdd(args.interactorObject);
         }
-    }
 
-    private void FindClimbingProvider()
-    {
-        if (!_playerClimbState)
+        protected override void OnSelectExited(SelectExitEventArgs args)
         {
-            _playerClimbState = FindObjectOfType<PlayerClimbState>();
+            base.OnSelectExited(args);
+            TryRemove(args.interactorObject);
         }
-    }
 
-    public override bool IsHoverableBy(IXRHoverInteractor interactor)
-    {
-        return base.IsHoverableBy(interactor) && interactor is XRDirectInteractor;
-    }
+        private void TryAdd(IXRInteractor interactor)
+        {
+            if (interactor.transform.TryGetComponent(out VelocityController controller))
+            {
+                _playerClimbState.AddController(controller);
+            }
+        }
 
-    public override bool IsSelectableBy(IXRSelectInteractor interactor)
-    {
-        return base.IsSelectableBy(interactor) && interactor is XRDirectInteractor;
+        private void TryRemove(IXRInteractor interactor)
+        {
+            if (interactor.transform.TryGetComponent(out VelocityController controller))
+            {
+                _playerClimbState.RemoveController(controller);
+            }
+        }
+
+        private void FindClimbingProvider()
+        {
+            if (!_playerClimbState)
+            {
+                _playerClimbState = FindObjectOfType<PlayerClimbState>();
+            }
+        }
+
+        public override bool IsHoverableBy(IXRHoverInteractor interactor)
+        {
+            return base.IsHoverableBy(interactor) && interactor is XRDirectInteractor;
+        }
+
+        public override bool IsSelectableBy(IXRSelectInteractor interactor)
+        {
+            return base.IsSelectableBy(interactor) && interactor is XRDirectInteractor;
+        }
     }
 }

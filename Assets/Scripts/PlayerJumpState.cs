@@ -15,6 +15,9 @@ namespace Assets.Scripts
 
         public override void EnterState(PlayerController_FSM player)
         {
+            player.IsJumping = true;
+            player.IsMonitoringJump = false;
+
             haptics = player.GetComponent<HapticsController>();
 
             // *-2 is supposed to be the gravity value.
@@ -50,6 +53,8 @@ namespace Assets.Scripts
             }
 
             haptics.SendHaptics();
+
+            player.IsJumping = false;
 
             // Transition back to the idle state once the jump has finished / player landed on ground
             player.StateTransition(player.IdleState);
