@@ -1,20 +1,27 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Game Event", fileName = "New Game Event")]
-public class GameEvent : ScriptableObject {
+namespace Assets.Scripts
+{
+    [CreateAssetMenu(menuName = "Game Event", fileName = "New Game Event")]
 
-    HashSet<GameEventListener> listners = new HashSet<GameEventListener>();
+    public class GameEvent : ScriptableObject
+    {
+        HashSet<GameEventListener> _listeners = new HashSet<GameEventListener>();
 
-    public void Invoke() {
-        foreach (var globalEventListener in listners) {
-            globalEventListener.RaiseEvent();
+        public void Invoke()
+        {
+            Debug.Log("[Game Event Invoke] _listeners count: " + _listeners.Count);
+
+            foreach (var globalEventListener in _listeners)
+            {
+                Debug.Log("Game Event Invoke: " + globalEventListener.name);
+                globalEventListener.RaiseEvent();
+            }
         }
+
+        public void Register(GameEventListener gameEventListener) => _listeners.Add(gameEventListener);
+
+        public void Deregister(GameEventListener gameEventListener) => _listeners.Remove(gameEventListener);
     }
-
-    public void Register(GameEventListener gameEventListener) => listners.Add(gameEventListener);
-
-    public void Deregister(GameEventListener gameEventListener) => listners.Remove(gameEventListener);
-    
 }

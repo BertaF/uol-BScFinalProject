@@ -46,14 +46,6 @@ namespace Assets.Scripts
 
         public override void OnCollisionEnter(Collision other, PlayerController_FSM player)
         {
-            if (player.JumpLanding)
-            {
-                Debug.Log("Sending Haptics");
-                player.JumpLanding.Invoke();
-            }
-
-            haptics.SendHaptics();
-
             player.IsJumping = false;
 
             // Transition back to the idle state once the jump has finished / player landed on ground

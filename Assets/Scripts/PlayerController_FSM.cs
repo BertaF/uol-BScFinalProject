@@ -7,12 +7,28 @@ namespace Assets.Scripts
     public class PlayerController_FSM : MonoBehaviour
     {
         #region Member Variables
-        [SerializeField] public float JumpBaselineThreshold = 1.0f;
+        [Header("Player Settings")]
         // This is based on a seated position, so will need to be adjusted if standing
-        [SerializeField] public float HeightDiffToTriggerJump = 0.15f; 
+        [SerializeField] public float HeightDiffToTriggerJump = 0.15f;
+        [SerializeField] public float JumpBaselineThreshold = 1.0f;
         [SerializeField] public float DistToGround = 1.5f;
+        [SerializeField] public bool ForceFall = false;
 
-        [Header("Game Events")]
+        [SerializeField] public GameObject CameraObject;
+        [SerializeField] public GameObject ForwardDir;
+        [SerializeField] public float CheckpointFallThreshold;
+        [SerializeField] public float JumpTriggerSoundThreshold;
+
+        [HideInInspector] public float HeadsetBaseline;
+        [HideInInspector] public float PreviousHeadsetBaseline;
+        [HideInInspector] public float UpAcceleration;
+        [HideInInspector] public float PreviousHeadsetUpVelocity;
+        [HideInInspector] public bool IsGrounded;
+        [HideInInspector] public bool IsMonitoringJump;
+        [HideInInspector] public bool IsJumping;
+        [HideInInspector] public bool IsClimbing;
+
+        [Header("Player Game Events")]
         [SerializeField] public GameEvent JumpLanding;
 
         // References to instances of player concrete states
@@ -23,19 +39,7 @@ namespace Assets.Scripts
         public CapsuleCollider CapsuleCollider { get; private set; }
 
         private Vector3 _currentPlayerPos;
-
-        [SerializeField] public GameObject CameraObject;
-        [SerializeField] public GameObject ForwardDir;
-        [SerializeField] public float CheckpointFallThreshold;
-
-        [HideInInspector] public float HeadsetBaseline;
-        [HideInInspector] public float PreviousHeadsetBaseline;
-        [HideInInspector] public float UpAcceleration;
-        [HideInInspector] public float PreviousHeadsetUpVelocity;
-        [HideInInspector] public bool IsGrounded;
-        [HideInInspector] public bool IsMonitoringJump;
-        [HideInInspector] public bool IsJumping;
-        [HideInInspector] public bool IsClimbing;
+        private bool _wasInAir;
         #endregion
 
         private void Awake()
@@ -44,6 +48,7 @@ namespace Assets.Scripts
             XrOrigin = GetComponent<XROrigin>();
             CapsuleCollider = GetComponent<CapsuleCollider>();
 
+            _wasInAir = false;
             IsGrounded = false;
             IsMonitoringJump = false;
             IsJumping = false;
@@ -93,24 +98,32 @@ namespace Assets.Scripts
         }
         private void DoGroundCheck()
         {
-            // Note: If this ray is cast from the capsule center, we might not hit ground when standing on the platform edge
-
             IsGrounded = Physics.Raycast(CapsuleCollider.transform.position + CapsuleCollider.center, Vector3.down, out var rayHit, DistToGround + 0.1f);
-            Debug.DrawRay(CapsuleCollider.transform.position + CapsuleCollider.center, Vector3.down, Color.magenta, 1.0f);
 
             if (IsGrounded)
             {
+                if (_wasInAir)
+                {
+                    // Play an audio landing SFX when returning to the ground
+                    JumpLanding?.Invoke();
+                }
+
+                _wasInAir = false;
                 _currentPlayerPos = CapsuleCollider.transform.position;
-                Debug.Log("Player at pos: "+ _currentPlayerPos + "is grounded on: " + rayHit.transform.name);
             }
             else
             {
-                Debug.Log("Player is NOT grounded");
+                _wasInAir = true;
             }
         }
 
         public bool HasFallen()
         {
+            if (ForceFall)
+            {
+                return true;
+            }
+
             if (IsGrounded || IsClimbing) { return false; }
 
             // Checks if the current player position is below the previous.

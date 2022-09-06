@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,7 +12,24 @@ namespace Assets.Scripts.UI
     {
         #region Member Variables
         [SerializeField] private ScreenFader _fadeScreen;
+        private GameObject _helpMenu;
+        private GameObject _mainMenu;
         #endregion
+
+        /// <summary>
+        /// Initialises the help and main menu variables. Disables the help meny by default.
+        /// </summary>
+        private void Awake()
+        {
+            _helpMenu = GameObject.FindGameObjectWithTag("HelpMenu");
+            _mainMenu = GameObject.FindGameObjectWithTag("MainMenu");
+
+            // Disable the help menu by default
+            if (_helpMenu)
+            {
+                _helpMenu.SetActive(false);
+            }
+        }
 
         /// <summary>
         /// Starts the switch sequence coroutine that fades out the screen and loads a given scene.
@@ -20,6 +38,20 @@ namespace Assets.Scripts.UI
         public void SwitchScene(int iScene)
         {
             StartCoroutine(SwitchSceneRoutine(iScene));
+        }
+
+        /// <summary>
+        /// Enables or disables the help menu. Also disables the main menu if the helper is active, and vice-versa
+        /// </summary>
+        /// <param name="shouldEnable">A boolean is passed to decide if the help menu object should be enabled/disabled.</param>
+        public void ToggleHelpMenu(bool shouldEnable)
+        {
+            if (!_helpMenu || !_mainMenu) return;
+
+            if (_helpMenu.activeSelf == shouldEnable || _mainMenu.activeSelf != shouldEnable) return;
+
+            _helpMenu.SetActive(shouldEnable);
+            _mainMenu.SetActive(!shouldEnable);
         }
 
         /// <summary>

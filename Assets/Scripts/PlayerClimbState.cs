@@ -12,6 +12,7 @@ namespace Assets.Scripts
     public class PlayerClimbState : MonoBehaviour
     {
         #region Member Variables
+        [Header("Player Climb Settings")]
         [Tooltip("Defines the max jump height value."), SerializeField]
         private float JumpHeight = 3.0f;
 

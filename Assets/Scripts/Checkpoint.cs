@@ -18,6 +18,19 @@ namespace Assets.Scripts
         {
             if (!other.CompareTag("Player")) { return; }
 
+            if (CompareTag("RespawnEnd"))
+            {
+                GameEnd?.Invoke();
+                return;
+            }
+
+            if (CompareTag("AudioCheckpoint"))
+            {
+                _audioTransitionPoint?.Invoke();
+                return;
+            }
+
+            // Cache this checkpoint position
             SetCheckpoint(transform);
         }
     }

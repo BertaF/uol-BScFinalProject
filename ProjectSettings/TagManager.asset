@@ -7,6 +7,10 @@ TagManager:
   - HeadsetBaseline
   - HeadsetCurrentPosLine
   - Ground
+  - RespawnEnd
+  - MainMenu
+  - HelpMenu
+  - AudioCheckpoint
   layers:
   - Default
   - TransparentFX

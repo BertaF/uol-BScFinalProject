@@ -1,14 +1,33 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 
-public class GameEventListener : MonoBehaviour 
+namespace Assets.Scripts
 {
-    [SerializeField] private GameEvent gameEvent;
-    [SerializeField] private UnityEvent unityEvent;
+    public class GameEventListener : MonoBehaviour
+    {
+        #region Member Variables
+        [SerializeField] GameEvent _gameEvent;
+        [SerializeField] UnityEvent _unityEvent;
+        #endregion
 
-    private void Awake() => gameEvent.Register(this);
+        void Awake()
+        {
+            if (_gameEvent)
+            {
+                Debug.Log("[GameEventListener] Registering event: " + _gameEvent.name);
+                _gameEvent.Register(this);
+            }
+        }
 
-    private void OnDestroy() => gameEvent.Deregister(this);
+        void OnDestroy()
+        {
+            if (_gameEvent)
+            {
+                Debug.Log("[GameEventListener] Unregistering event" + _gameEvent.name);
+                _gameEvent.Deregister(this);
+            }
+        }
 
-    public void RaiseEvent() => unityEvent.Invoke();
+        public void RaiseEvent() => _unityEvent.Invoke();
+    }
 }
